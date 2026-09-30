@@ -1,0 +1,53 @@
+.admin-page { overflow: auto; min-height: 100%; background: #141611; color: #f7f3df; }
+.admin-shell { width: min(1180px, calc(100% - 48px)); min-height: 100vh; margin: 0 auto; padding: 34px 0 48px; }
+.admin-header { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 23px; border-bottom: 1px solid rgba(255,255,255,.14); }
+.back-link, .admin-account { color: rgba(255,255,255,.67); font-size: 10px; font-weight: 700; letter-spacing: .12em; text-decoration: none; }
+.back-link:hover { color: #ffe45c; }
+.admin-kicker { margin: 0 0 5px; color: #ffe45c; font-size: 9px; font-weight: 700; letter-spacing: .16em; }
+.admin-header h1 { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 37px; font-weight: 800; line-height: 1; }
+.admin-login { margin: 25px 0; padding: 16px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.035); }
+.admin-login label { display: block; margin-bottom: 8px; color: rgba(255,255,255,.65); font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+.login-row { display: flex; max-width: 520px; gap: 8px; }
+.login-row input { min-width: 0; flex: 1; padding: 10px; border: 1px solid rgba(255,255,255,.2); border-radius: 2px; background: #20221c; color: #fff; font: inherit; }
+.admin-message { min-height: 14px; margin: 8px 0 0; color: rgba(255,255,255,.56); font-size: 10px; }
+.admin-content.is-locked { opacity: .4; pointer-events: none; user-select: none; }
+.admin-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; margin-top: 24px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.12); }
+.admin-stat { display: flex; min-height: 105px; flex-direction: column; justify-content: space-between; padding: 15px; background: #1a1c16; }
+.admin-stat span { color: rgba(255,255,255,.59); font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+.admin-stat strong { overflow-wrap: anywhere; font-family: 'Barlow Condensed', sans-serif; font-size: clamp(23px, 3vw, 35px); font-weight: 800; }
+.admin-stat--red strong { color: #ff7568; }
+.admin-stat--green strong { color: #78d99b; }
+.admin-actions { display: flex; min-height: 72px; align-items: center; gap: 9px; border-bottom: 1px solid rgba(255,255,255,.12); }
+.admin-button { min-height: 36px; padding: 0 13px; border: 1px solid rgba(255,228,92,.55); border-radius: 2px; background: rgba(255,228,92,.12); color: #ffe45c; cursor: pointer; font-size: 9px; font-weight: 700; letter-spacing: .05em; }
+.admin-button:hover { background: rgba(255,228,92,.21); }
+.admin-button--danger { border-color: rgba(255,111,97,.48); background: rgba(237,57,47,.14); color: #ff887b; }
+.admin-button--danger:hover { background: rgba(237,57,47,.26); }
+.admin-button--muted { border-color: rgba(255,255,255,.18); background: transparent; color: #eee; }
+#action-message { margin-left: auto; color: rgba(255,255,255,.7); font-size: 10px; }
+.admin-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 22px; }
+.admin-list { min-width: 0; }
+.admin-list header { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.16); }
+.admin-list h2 { margin: 0; font-family: 'Barlow Condensed', sans-serif; font-size: 19px; font-weight: 800; }
+.admin-list header span { color: rgba(255,255,255,.47); font-size: 8px; font-weight: 700; letter-spacing: .08em; }
+.admin-rows { max-height: 390px; overflow: auto; }
+.admin-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 10px 2px; border-bottom: 1px solid rgba(255,255,255,.075); }
+.admin-row__main { overflow: hidden; color: rgba(255,255,255,.9); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.admin-row__meta { color: rgba(255,255,255,.46); font-size: 9px; white-space: nowrap; }
+.admin-row--log .admin-row__main { font-family: ui-monospace, Consolas, monospace; font-size: 10px; }
+.confirm-dialog { width: min(400px, calc(100% - 30px)); padding: 22px; border: 1px solid rgba(255,255,255,.2); border-radius: 3px; background: #1a1c16; color: #f7f3df; box-shadow: 0 20px 80px rgba(0,0,0,.45); }
+.confirm-dialog::backdrop { background: rgba(0,0,0,.7); backdrop-filter: blur(3px); }
+.confirm-dialog p { margin: 0 0 8px; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 800; }
+.confirm-dialog span { color: rgba(255,255,255,.62); font-size: 11px; line-height: 1.5; }
+.confirm-dialog form > div { display: flex; justify-content: flex-end; gap: 8px; margin-top: 21px; }
+
+@media (max-width: 700px) {
+  .admin-shell { width: calc(100% - 28px); padding-top: 20px; }
+  .admin-header { gap: 10px; }
+  .admin-header h1 { font-size: 29px; }
+  .admin-account, .back-link { font-size: 8px; }
+  .admin-stats { grid-template-columns: 1fr 1fr; }
+  .admin-stat { min-height: 83px; }
+  .admin-columns { grid-template-columns: 1fr; gap: 23px; }
+  .admin-actions { flex-wrap: wrap; padding: 10px 0; }
+  #action-message { flex-basis: 100%; margin: 0; }
+}

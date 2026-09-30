@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11120e">
+  <title>Admin | Live Battle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/admin.css">
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script src="/admin.js" defer></script>
+</head>
+<body class="admin-page">
+  <main class="admin-shell">
+    <header class="admin-header"><a href="/" class="back-link">← PLACAR</a><div><p class="admin-kicker">LIVE BATTLE / CONTROLE</p><h1>ADMINISTRAÇÃO</h1></div><span class="admin-account">@quiz_azul</span></header>
+    <section class="admin-login" id="login-panel">
+      <form id="login-form"><label for="admin-token">TOKEN ADMINISTRATIVO</label><div class="login-row"><input id="admin-token" type="password" autocomplete="current-password" required><button class="admin-button" type="submit">ENTRAR</button></div><p class="admin-message" id="login-message">Configure ADMIN_TOKEN no ambiente do servidor.</p></form>
+    </section>
+    <section class="admin-content is-locked" id="admin-content" aria-label="Controles administrativos">
+      <div class="admin-stats">
+        <article class="admin-stat"><span>STATUS DA LIVE</span><strong id="admin-live">DESCONECTADA</strong></article>
+        <article class="admin-stat"><span>CONTA</span><strong id="admin-account">@quiz_azul</strong></article>
+        <article class="admin-stat admin-stat--red"><span>ESQUERDA</span><strong id="admin-left">0</strong></article>
+        <article class="admin-stat admin-stat--green"><span>DIREITA</span><strong id="admin-right">0</strong></article>
+      </div>
+      <div class="admin-actions"><button class="admin-button" id="reconnect-button" type="button">↻ &nbsp; RECONECTAR LIVE</button><button class="admin-button admin-button--danger" id="reset-button" type="button">ZERAR PLACAR</button><p id="action-message" role="status"></p></div>
+      <div class="admin-columns"><section class="admin-list"><header><h2>ÚLTIMOS PRESENTES</h2><span>20 MAIS RECENTES</span></header><div id="admin-gifts" class="admin-rows"></div></section><section class="admin-list"><header><h2>LOG DE EVENTOS</h2><span>100 MAIS RECENTES</span></header><div id="admin-logs" class="admin-rows"></div></section></div>
+    </section>
+  </main>
+  <dialog id="reset-dialog" class="confirm-dialog"><form method="dialog"><p>ZERAR O PLACAR?</p><span>Os pontos voltarão a zero. O histórico de presentes será mantido.</span><div><button value="cancel" class="admin-button admin-button--muted">CANCELAR</button><button value="confirm" class="admin-button admin-button--danger">ZERAR</button></div></form></dialog>
+</body>
+</html>

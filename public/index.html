@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#11120e">
+  <title>Live Battle | Quiz Azul</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <main class="battle" aria-label="Placar Live Battle">
+    <section class="team team--left" aria-label="Equipe esquerda">
+      <div class="team__wash"></div>
+      <header class="team__header"><span class="team__index">01 / TIME</span><span class="team__rule"></span></header>
+      <div class="team__identity">
+        <svg class="star" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 3 61 37 97 37 68 58 79 93 50 72 21 93 32 58 3 37 39 37Z"/></svg>
+        <p class="team__name">ESQUERDA</p>
+      </div>
+      <div class="team__score" id="left-score" aria-live="polite">0</div>
+      <div class="team__label">PONTOS</div>
+      <div class="score-pop" id="left-pop" aria-hidden="true"></div>
+      <div class="team__foot"><span>ROSA VERMELHA</span><span class="team__foot-mark">✳</span></div>
+    </section>
+
+    <section class="team team--right" aria-label="Equipe direita">
+      <div class="team__wash"></div>
+      <header class="team__header"><span class="team__index">02 / TIME</span><span class="team__rule"></span></header>
+      <div class="team__identity team__identity--right">
+        <span class="right-mark" aria-hidden="true">✳</span>
+        <p class="team__name">DIREITA</p>
+      </div>
+      <div class="team__score" id="right-score" aria-live="polite">0</div>
+      <div class="team__label">PONTOS</div>
+      <div class="score-pop" id="right-pop" aria-hidden="true"></div>
+      <div class="team__foot"><span>ROSA BRANCA</span><span class="team__foot-mark">✳</span></div>
+    </section>
+
+    <div class="topbar">
+      <div class="live-status" id="live-status"><span class="live-status__dot"></span><span id="live-label">LIVE DESCONECTADA</span></div>
+      <a class="account" href="https://www.tiktok.com/@quiz_azul/live" target="_blank" rel="noreferrer"><span class="account__at">@</span><span id="account-name">quiz_azul</span></a>
+      <div class="topbar__actions"><button class="small-button" id="connect-button" type="button">CONECTAR LIVE</button><button class="small-button small-button--quiet" id="disconnect-button" type="button">DESCONECTAR</button></div>
+    </div>
+
+    <div class="matchup" aria-label="Placar central">
+      <div class="matchup__score"><span>ESQUERDA</span><strong id="center-left">0</strong><i>×</i><strong id="center-right">0</strong><span>DIREITA</span></div>
+      <div class="ratio"><span class="ratio__left" id="left-ratio">50%</span><div class="ratio__track"><span id="ratio-fill"></span></div><span class="ratio__right" id="right-ratio">50%</span></div>
+    </div>
+
+    <aside class="event-feed" id="event-feed" aria-live="polite" aria-label="Últimos presentes"></aside>
+    <a class="admin-link" href="/admin" aria-label="Abrir painel de administração">PAINEL <span>↗</span></a>
+    <div class="connection-note" id="connection-note" aria-live="polite"></div>
+  </main>
+</body>
+</html>

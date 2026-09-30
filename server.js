@@ -1,0 +1,98 @@
+import 'dotenv/config';
+import crypto from 'node:crypto';
+import express from 'express';
+import helmet from 'helmet';
+import http from 'node:http';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { Server as SocketServer } from 'socket.io';
+import { ScoreStore } from './lib/score-store.js';
+import { TikTokService } from './lib/tiktok-service.js';
+
+const root = path.dirname(fileURLToPath(import.meta.url));
+const port = Number(process.env.PORT) || 3000;
+const username = (process.env.TIKTOK_USERNAME || 'quiz_azul').replace(/^@/, '');
+const store = new ScoreStore(process.env.SCORE_FILE || path.join(root, 'data', 'score.json'));
+const app = express();
+const server = http.createServer(app);
+const io = new SocketServer(server);
+let tiktok;
+
+app.disable('x-powered-by');
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'", 'https://fonts.googleapis.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      connectSrc: ["'self'", 'ws:', 'wss:'],
+      imgSrc: ["'self'", 'data:']
+    }
+  }
+}));
+app.use(express.json({ limit: '10kb' }));
+app.use(express.static(path.join(root, 'public')));
+
+const snapshot = () => ({ score: store.getState(), live: tiktok?.getStatus() ?? { connected: false, connecting: false, username } });
+const broadcast = () => io.emit('state', snapshot());
+const log = message => {
+  console.log(message);
+  store.addLog(message);
+  broadcast();
+};
+
+tiktok = new TikTokService({
+  username,
+  signApiKey: process.env.TIKTOK_SIGN_API_KEY,
+  store,
+  log,
+  onUpdate: broadcast,
+  onStatus: broadcast
+});
+
+io.on('connection', socket => socket.emit('state', snapshot()));
+
+app.get('/admin', (_request, response) => response.sendFile(path.join(root, 'public', 'admin.html')));
+app.get('/api/state', (_request, response) => response.json(snapshot()));
+
+function requireAdmin(request, response, next) {
+  const expected = process.env.ADMIN_TOKEN;
+  const supplied = request.get('x-admin-token') || '';
+  if (!expected || expected === 'replace-with-a-long-random-secret') {
+    return response.status(503).json({ error: 'Configure um ADMIN_TOKEN forte no ambiente do servidor.' });
+  }
+  const expectedBuffer = Buffer.from(expected);
+  const suppliedBuffer = Buffer.from(supplied);
+  if (expectedBuffer.length !== suppliedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)) {
+    return response.status(401).json({ error: 'Token administrativo inválido.' });
+  }
+  return next();
+}
+
+app.get('/api/admin/state', requireAdmin, (_request, response) => response.json(snapshot()));
+app.post('/api/admin/reset', requireAdmin, (_request, response) => {
+  store.reset();
+  log('[ADMIN] Placar zerado.');
+  response.json(snapshot());
+});
+app.post('/api/admin/reconnect', requireAdmin, async (_request, response) => {
+  response.json(await tiktok.connect(true));
+  broadcast();
+});
+
+app.get('*', (request, response, next) => {
+  if (request.path.startsWith('/api/')) return response.status(404).json({ error: 'Rota não encontrada.' });
+  return next();
+});
+
+server.listen(port, () => {
+  console.log(`Live Battle disponível em http://localhost:${port}`);
+  tiktok.connect(false);
+});
+
+function shutdown() {
+  tiktok.disconnect().finally(() => server.close(() => process.exit(0)));
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
