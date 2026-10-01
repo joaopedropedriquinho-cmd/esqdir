@@ -1,10 +1,10 @@
 const socket = io();
-const tokenInput = document.querySelector('#admin-token');
+const passwordInput = document.querySelector('#admin-password');
 const loginForm = document.querySelector('#login-form');
 const loginMessage = document.querySelector('#login-message');
 const content = document.querySelector('#admin-content');
 const actionMessage = document.querySelector('#action-message');
-let token = '';
+let password = '';
 
 function row(mainText, metaText = '', logRow = false) {
   const item = document.createElement('div');
@@ -33,7 +33,7 @@ function render({ score, live }) {
 }
 
 async function loadState() {
-  const response = await fetch('/api/admin/state', { headers: { 'x-admin-token': token } });
+  const response = await fetch('/api/admin/state', { headers: { 'x-system-password': password } });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Falha ao acessar o painel.');
   content.classList.remove('is-locked');
@@ -43,21 +43,21 @@ async function loadState() {
 
 loginForm.addEventListener('submit', async event => {
   event.preventDefault();
-  token = tokenInput.value;
+  password = passwordInput.value;
   try {
     await loadState();
-    tokenInput.value = '';
+    passwordInput.value = '';
   } catch (error) {
-    token = '';
+    password = '';
     loginMessage.textContent = error.message;
   }
 });
 
-socket.on('state', data => { if (token) render(data); });
+socket.on('state', data => { if (password) render(data); });
 socket.on('connect_error', () => { actionMessage.textContent = 'Tempo real desconectado.'; });
 
-async function adminRequest(path, confirm = false, password) {
-  if (!token) return;
+async function adminRequest(path, confirm = false) {
+  if (!password) return;
   if (confirm) {
     const dialog = document.querySelector('#reset-dialog');
     dialog.showModal();
@@ -68,11 +68,16 @@ async function adminRequest(path, confirm = false, password) {
   try {
     const response = await fetch(path, {
       method: 'POST',
-      headers: { 'x-admin-token': token, 'content-type': 'application/json' },
-      body: JSON.stringify(password === undefined ? {} : { password })
+      headers: { 'x-system-password': password }
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Falha na solicitação.');
+    if (!response.ok) {
+      if (response.status === 401) {
+        password = '';
+        content.classList.add('is-locked');
+      }
+      throw new Error(data.error || 'Falha na solicitação.');
+    }
     render(data);
     actionMessage.textContent = 'Concluído.';
   } catch (error) {
@@ -81,7 +86,4 @@ async function adminRequest(path, confirm = false, password) {
 }
 
 document.querySelector('#reset-button').addEventListener('click', () => adminRequest('/api/admin/reset', true));
-document.querySelector('#reconnect-button').addEventListener('click', () => {
-  const password = window.prompt('Senha para iniciar a live');
-  if (password !== null) adminRequest('/api/admin/reconnect', false, password);
-});
+document.querySelector('#reconnect-button').addEventListener('click', () => adminRequest('/api/admin/reconnect'));

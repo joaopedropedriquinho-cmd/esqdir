@@ -8,7 +8,6 @@ import { io as createSocket } from 'socket.io-client';
 import { createGiftHandler } from '../lib/gift-rules.js';
 
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'live-battle-server-'));
-process.env.ADMIN_TOKEN = 'rofer';
 process.env.LIVE_START_PASSWORD = 'rofer';
 process.env.SCORE_FILE = path.join(temporaryDirectory, 'score.json');
 const { server, io, store, snapshot, publishGift, tiktok } = await import('../server.js');
@@ -81,15 +80,14 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
   const unauthorized = await fetch(`${baseUrl}/api/admin/reset`, { method: 'POST' });
   assert.equal(unauthorized.status, 401);
 
-  const adminHeaders = { 'x-admin-token': 'rofer', 'content-type': 'application/json' };
-  const adminState = await fetch(`${baseUrl}/api/admin/state`, { headers: { 'x-admin-token': 'rofer' } });
+  const systemHeaders = { 'x-system-password': 'rofer' };
+  const adminState = await fetch(`${baseUrl}/api/admin/state`, { headers: systemHeaders });
   assert.equal(adminState.status, 200);
   assert.equal((await adminState.json()).live.username, 'quiz_azul');
 
   const wrongPassword = await fetch(`${baseUrl}/api/connect`, {
     method: 'POST',
-    headers: adminHeaders,
-    body: JSON.stringify({ password: 'wrong' })
+    headers: { 'x-system-password': 'wrong' }
   });
   assert.equal(wrongPassword.status, 401);
   assert.equal((await wrongPassword.json()).error, 'Senha incorreta.');
@@ -97,24 +95,21 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
 
   const validPassword = await fetch(`${baseUrl}/api/connect`, {
     method: 'POST',
-    headers: adminHeaders,
-    body: JSON.stringify({ password: 'rofer' })
+    headers: systemHeaders
   });
   assert.equal(validPassword.status, 200);
   assert.equal(connectCalls, 1);
 
   const wrongAdminReconnectPassword = await fetch(`${baseUrl}/api/admin/reconnect`, {
     method: 'POST',
-    headers: adminHeaders,
-    body: JSON.stringify({ password: 'wrong' })
+    headers: { 'x-system-password': 'wrong' }
   });
   assert.equal(wrongAdminReconnectPassword.status, 401);
   assert.equal((await wrongAdminReconnectPassword.json()).error, 'Senha incorreta.');
 
   const validAdminReconnectPassword = await fetch(`${baseUrl}/api/admin/reconnect`, {
     method: 'POST',
-    headers: adminHeaders,
-    body: JSON.stringify({ password: 'rofer' })
+    headers: systemHeaders
   });
   assert.equal(validAdminReconnectPassword.status, 200);
   assert.equal(connectCalls, 2);
@@ -143,7 +138,7 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
 
   const resetResponse = await fetch(`${baseUrl}/api/admin/reset`, {
     method: 'POST',
-    headers: { 'x-admin-token': 'rofer' }
+    headers: systemHeaders
   });
   assert.equal(resetResponse.status, 200);
   const broadcast = await waitForState(state => state.score.logs[0]?.message === 'Placar zerado pelo painel de administração.');

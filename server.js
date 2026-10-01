@@ -60,49 +60,35 @@ io.on('connection', socket => socket.emit('state', snapshot()));
 app.get('/admin', (_request, response) => response.sendFile(path.join(root, 'public', 'admin.html')));
 app.get('/api/state', (_request, response) => response.json(snapshot()));
 
-function requireAdmin(request, response, next) {
-  const expected = process.env.ADMIN_TOKEN;
-  const supplied = request.get('x-admin-token') || '';
-  if (!expected || expected === 'replace-with-a-long-random-secret') {
-    return response.status(503).json({ error: 'Configure um ADMIN_TOKEN forte no ambiente do servidor.' });
-  }
-  const expectedBuffer = Buffer.from(expected);
-  const suppliedBuffer = Buffer.from(supplied);
-  if (expectedBuffer.length !== suppliedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)) {
-    return response.status(401).json({ error: 'Token administrativo inválido.' });
-  }
-  return next();
-}
-
-function requireLiveStartPassword(request, response, next) {
+function requirePassword(request, response, next) {
   const expected = process.env.LIVE_START_PASSWORD;
   if (!expected) {
     return response.status(503).json({ error: 'Configure LIVE_START_PASSWORD no ambiente do servidor.' });
   }
   const expectedBuffer = Buffer.from(expected);
-  const suppliedBuffer = Buffer.from(typeof request.body?.password === 'string' ? request.body.password : '');
+  const suppliedBuffer = Buffer.from(request.get('x-system-password') || '');
   if (expectedBuffer.length !== suppliedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)) {
     return response.status(401).json({ error: 'Senha incorreta.' });
   }
   return next();
 }
 
-app.post('/api/connect', requireAdmin, requireLiveStartPassword, async (_request, response) => {
+app.post('/api/connect', requirePassword, async (_request, response) => {
   await tiktok.connect(true);
   response.json(snapshot());
 });
-app.post('/api/disconnect', requireAdmin, async (_request, response) => {
+app.post('/api/disconnect', requirePassword, async (_request, response) => {
   await tiktok.disconnect();
   response.json(snapshot());
 });
-app.get('/api/admin/state', requireAdmin, (_request, response) => response.json(snapshot()));
-app.post('/api/admin/reset', requireAdmin, (_request, response) => {
+app.get('/api/admin/state', requirePassword, (_request, response) => response.json(snapshot()));
+app.post('/api/admin/reset', requirePassword, (_request, response) => {
   store.reset();
   console.log('[ADMIN] Placar zerado.');
   broadcast();
   response.json(snapshot());
 });
-app.post('/api/admin/reconnect', requireAdmin, requireLiveStartPassword, async (_request, response) => {
+app.post('/api/admin/reconnect', requirePassword, async (_request, response) => {
   response.json(await tiktok.connect(true));
   broadcast();
 });

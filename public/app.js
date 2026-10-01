@@ -103,22 +103,16 @@ socket.on('connect_error', () => { connectionNote.textContent = 'Atualização e
 socket.on('connect', () => { if (socket.connected) connectionNote.textContent = ''; });
 
 async function requestConnection(path, password) {
-  const token = window.adminToken || window.prompt('Informe o token ADMIN_TOKEN para controlar a conexão:');
-  if (!token) return;
-  window.adminToken = token;
+  if (!password) return;
   const buttons = [...document.querySelectorAll('.topbar button')];
   buttons.forEach(button => { button.disabled = true; });
   try {
     const response = await fetch(path, {
       method: 'POST',
-      headers: { 'x-admin-token': token, 'content-type': 'application/json' },
-      body: JSON.stringify(password === undefined ? {} : { password })
+      headers: { 'x-system-password': password }
     });
     const state = await response.json();
-    if (!response.ok) {
-      if (response.status === 401 && state.error !== 'Senha incorreta.') window.adminToken = '';
-      throw new Error(state.error || 'Falha na solicitação.');
-    }
+    if (!response.ok) throw new Error(state.error || 'Falha na solicitação.');
     render(state);
     if (path === '/api/connect') startLiveDialog.close();
   } catch (error) {
@@ -145,4 +139,7 @@ document.querySelector('#start-live-form').addEventListener('submit', event => {
   requestConnection('/api/connect', startLivePassword.value);
 });
 document.querySelector('#cancel-start-live').addEventListener('click', () => startLiveDialog.close());
-document.querySelector('#disconnect-button').addEventListener('click', () => requestConnection('/api/disconnect'));
+document.querySelector('#disconnect-button').addEventListener('click', () => {
+  const password = window.prompt('Senha do sistema');
+  if (password !== null) requestConnection('/api/disconnect', password);
+});
