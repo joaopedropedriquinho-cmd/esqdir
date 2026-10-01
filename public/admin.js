@@ -56,7 +56,7 @@ loginForm.addEventListener('submit', async event => {
 socket.on('state', data => { if (token) render(data); });
 socket.on('connect_error', () => { actionMessage.textContent = 'Tempo real desconectado.'; });
 
-async function adminRequest(path, confirm = false) {
+async function adminRequest(path, confirm = false, password) {
   if (!token) return;
   if (confirm) {
     const dialog = document.querySelector('#reset-dialog');
@@ -66,7 +66,11 @@ async function adminRequest(path, confirm = false) {
   }
   actionMessage.textContent = 'Processando...';
   try {
-    const response = await fetch(path, { method: 'POST', headers: { 'x-admin-token': token } });
+    const response = await fetch(path, {
+      method: 'POST',
+      headers: { 'x-admin-token': token, 'content-type': 'application/json' },
+      body: JSON.stringify(password === undefined ? {} : { password })
+    });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Falha na solicitação.');
     render(data);
@@ -77,4 +81,7 @@ async function adminRequest(path, confirm = false) {
 }
 
 document.querySelector('#reset-button').addEventListener('click', () => adminRequest('/api/admin/reset', true));
-document.querySelector('#reconnect-button').addEventListener('click', () => adminRequest('/api/admin/reconnect'));
+document.querySelector('#reconnect-button').addEventListener('click', () => {
+  const password = window.prompt('Senha para iniciar a live');
+  if (password !== null) adminRequest('/api/admin/reconnect', false, password);
+});

@@ -36,6 +36,10 @@ app.use(express.static(path.join(root, 'public')));
 
 const snapshot = () => ({ score: store.getState(), live: tiktok?.getStatus() ?? { connected: false, connecting: false, username } });
 const broadcast = () => io.emit('state', snapshot());
+const publishGift = event => {
+  broadcast();
+  io.emit('gift', event);
+};
 const log = message => {
   console.log(message);
   store.addLog(message);
@@ -47,7 +51,7 @@ tiktok = new TikTokService({
   signApiKey: process.env.TIKTOK_SIGN_API_KEY,
   store,
   log,
-  onUpdate: broadcast,
+  onUpdate: publishGift,
   onStatus: broadcast
 });
 
@@ -70,7 +74,20 @@ function requireAdmin(request, response, next) {
   return next();
 }
 
-app.post('/api/connect', requireAdmin, async (_request, response) => {
+function requireLiveStartPassword(request, response, next) {
+  const expected = process.env.LIVE_START_PASSWORD;
+  if (!expected) {
+    return response.status(503).json({ error: 'Configure LIVE_START_PASSWORD no ambiente do servidor.' });
+  }
+  const expectedBuffer = Buffer.from(expected);
+  const suppliedBuffer = Buffer.from(typeof request.body?.password === 'string' ? request.body.password : '');
+  if (expectedBuffer.length !== suppliedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)) {
+    return response.status(401).json({ error: 'Senha incorreta.' });
+  }
+  return next();
+}
+
+app.post('/api/connect', requireAdmin, requireLiveStartPassword, async (_request, response) => {
   await tiktok.connect(true);
   response.json(snapshot());
 });
@@ -85,7 +102,7 @@ app.post('/api/admin/reset', requireAdmin, (_request, response) => {
   broadcast();
   response.json(snapshot());
 });
-app.post('/api/admin/reconnect', requireAdmin, async (_request, response) => {
+app.post('/api/admin/reconnect', requireAdmin, requireLiveStartPassword, async (_request, response) => {
   response.json(await tiktok.connect(true));
   broadcast();
 });
@@ -99,7 +116,6 @@ const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPat
 if (isMain) {
   server.listen(port, () => {
     console.log(`Live Battle disponível em http://localhost:${port}`);
-    tiktok.connect(false);
   });
 
   function shutdown() {
@@ -109,4 +125,4 @@ if (isMain) {
   process.on('SIGTERM', shutdown);
 }
 
-export { server, io, store, tiktok, snapshot };
+export { server, io, store, tiktok, snapshot, publishGift };

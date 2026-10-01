@@ -5,11 +5,11 @@ Placar de duas equipes atualizado em tempo real por presentes recebidos no chat 
 ## Executar localmente
 
 1. Use Node.js 20 ou superior.
-2. Copie `.env.example` para `.env` e configure um `ADMIN_TOKEN` longo e aleatório. A conta padrão já é `quiz_azul`.
+2. Copie `.env.example` para `.env`; configure um `ADMIN_TOKEN` longo e aleatório e a `LIVE_START_PASSWORD`. A senha inicial padrão do exemplo é `rofer` e a conta padrão é `quiz_azul`.
 3. Execute `npm install` e depois `npm start`.
 4. Abra `http://localhost:3000` e o painel em `http://localhost:3000/admin`.
 
-O servidor tenta conectar automaticamente à live. As rotas de conectar/desconectar e o painel administrativo exigem `ADMIN_TOKEN`. A leitura do placar e o Socket.IO são públicos. A biblioteca lê a live pública sem cookies TikTok; um `TIKTOK_SIGN_API_KEY` é opcional, usado para elevar os limites de conexão do serviço de assinatura.
+O servidor não inicia a conexão TikTok ao subir. Use **CONECTAR LIVE** e informe a senha para iniciar; a verificação ocorre no backend. As ações de conexão também exigem `ADMIN_TOKEN`, e o painel administrativo mantém essa proteção. Após iniciada, uma queda da conexão é reconectada automaticamente. A leitura do placar e o Socket.IO são públicos. A biblioteca lê a live pública sem cookies TikTok; um `TIKTOK_SIGN_API_KEY` é opcional, usado para elevar os limites de conexão do serviço de assinatura.
 
 ## Presentes e identificação
 
@@ -23,7 +23,7 @@ Se o evento real usar outro nome, consulte a linha `[GIFT]` no log do servidor e
 
 O placar, os últimos presentes, logs e IDs recentes processados são gravados atomicamente em `SCORE_FILE` (por padrão `data/score.json`). A zeragem exige confirmação e mantém o histórico. Em ambientes efêmeros, como o disco padrão do Render, os dados somem em reinicializações; use um disco persistente.
 
-O `render.yaml` configura o serviço Node, health check, `ADMIN_TOKEN` gerado pelo Render e disco persistente em `/var/data`. Ao criar o Blueprint, adicione manualmente no ambiente os IDs reais confirmados para as rosas e, se necessário, a chave opcional de assinatura. O disco do Blueprint requer um plano Render com disco persistente.
+O `render.yaml` configura o serviço Node, health check, `ADMIN_TOKEN` gerado pelo Render e disco persistente em `/var/data`. Ao criar o Blueprint, configure `LIVE_START_PASSWORD` (use `rofer` ou altere-a), os IDs reais confirmados para as rosas e, se necessário, a chave opcional de assinatura. O disco do Blueprint requer um plano Render com disco persistente.
 
 ## Verificações
 

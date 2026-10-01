@@ -19,6 +19,8 @@ services:
         value: /var/data/score.json
       - key: ADMIN_TOKEN
         generateValue: true
+      - key: LIVE_START_PASSWORD
+        sync: false
       - key: TIKTOK_RED_ROSE_GIFT_IDS
         sync: false
       - key: TIKTOK_WHITE_ROSE_GIFT_IDS

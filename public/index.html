@@ -9,8 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style.css">
-  <script src="/socket.io/socket.io.js" defer></script>
-  <script src="/app.js" defer></script>
 </head>
 <body>
   <main class="battle" aria-label="Placar Live Battle">
@@ -55,5 +53,39 @@
     <a class="admin-link" href="/admin" aria-label="Abrir painel de administração">PAINEL <span>↗</span></a>
     <div class="connection-note" id="connection-note" aria-live="polite"></div>
   </main>
+
+  <dialog class="start-live-dialog" id="start-live-dialog" aria-labelledby="start-live-title">
+    <form id="start-live-form">
+      <p class="start-live-dialog__eyebrow">ACESSO PROTEGIDO</p>
+      <h1 id="start-live-title">Iniciar conexão</h1>
+      <label for="start-live-password">Senha para iniciar a live</label>
+      <input id="start-live-password" name="password" type="password" autocomplete="current-password" required>
+      <p class="start-live-dialog__error" id="start-live-error" role="alert"></p>
+      <div class="start-live-dialog__actions">
+        <button class="small-button small-button--quiet" id="cancel-start-live" type="button">CANCELAR</button>
+        <button class="small-button" type="submit">CONECTAR</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="rose-alert" id="rose-alert" aria-hidden="true" aria-live="assertive">
+    <div class="rose-alert__panel" role="status">
+      <div class="rose-alert__symbols" aria-hidden="true">
+        <svg class="rose-alert__heart" viewBox="0 0 48 48"><path d="M24 43S4 31.5 4 17.2C4 9.1 14.4 4.1 24 14.5 33.6 4.1 44 9.1 44 17.2 44 31.5 24 43 24 43Z"/></svg>
+        <svg class="rose-alert__flower" viewBox="0 0 96 96">
+          <path class="rose-alert__stem" d="M48 53c1 14-5 22-7 32m6-19c-8-8-15-7-20-5 4 9 11 12 20 10m1-4c7-8 14-8 19-6-4 9-11 12-20 11"/>
+          <path class="rose-alert__bloom" d="M48 12c-9-7-20-1-18 9-10-2-17 8-11 16-9 7-6 20 5 22 0 11 12 17 21 10 9 7 21 1 21-10 11-2 14-15 5-22 6-8-1-18-11-16 2-10-9-16-18-9Z"/>
+          <path class="rose-alert__detail" d="M30 25c5-5 10-4 13 1-6 1-9 5-9 10 7-1 12-5 14-11 7 5 9 11 7 16-2 6-8 9-12 15m5-15c-1-7 4-12 11-14"/>
+        </svg>
+        <svg class="rose-alert__heart" viewBox="0 0 48 48"><path d="M24 43S4 31.5 4 17.2C4 9.1 14.4 4.1 24 14.5 33.6 4.1 44 9.1 44 17.2 44 31.5 24 43 24 43Z"/></svg>
+      </div>
+      <h2 class="rose-alert__title" id="rose-alert-title">ROSA VERMELHA</h2>
+      <p class="rose-alert__team" id="rose-alert-team">ESQUERDA +1</p>
+      <p class="rose-alert__sender" id="rose-alert-sender">@usuario enviou uma rosa vermelha</p>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="/app.js"></script>
 </body>
 </html>

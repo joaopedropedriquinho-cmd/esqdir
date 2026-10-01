@@ -9,8 +9,9 @@ import { createGiftHandler } from '../lib/gift-rules.js';
 
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'live-battle-server-'));
 process.env.ADMIN_TOKEN = 'test-admin-token';
+process.env.LIVE_START_PASSWORD = 'rofer';
 process.env.SCORE_FILE = path.join(temporaryDirectory, 'score.json');
-const { server, io, store, snapshot } = await import('../server.js');
+const { server, io, store, snapshot, publishGift, tiktok } = await import('../server.js');
 
 test('serves the live score, protects admin APIs, and broadcasts over Socket.IO', async t => {
   server.listen(0);
@@ -23,7 +24,14 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
   const address = server.address();
   const baseUrl = `http://127.0.0.1:${address.port}`;
   const client = createSocket(baseUrl, { transports: ['websocket'], forceNew: true });
+  const originalConnect = tiktok.connect;
+  let connectCalls = 0;
+  tiktok.connect = async () => {
+    connectCalls += 1;
+    return tiktok.getStatus();
+  };
   t.after(async () => {
+    tiktok.connect = originalConnect;
     client.close();
     io.close();
     await new Promise(resolve => server.close(resolve));
@@ -48,6 +56,19 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
       delay(3000).then(() => { throw new Error('Expected Socket.IO state was not received.'); })
     ]);
   };
+  const waitForGift = team => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      client.off('gift', listener);
+      reject(new Error('Socket.IO gift event was not received.'));
+    }, 3000);
+    const listener = event => {
+      if (event.team !== team) return;
+      clearTimeout(timer);
+      client.off('gift', listener);
+      resolve(event);
+    };
+    client.on('gift', listener);
+  });
   client.connect();
   await Promise.race([
     new Promise(resolve => client.once('connect', resolve)),
@@ -60,22 +81,60 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
   const unauthorized = await fetch(`${baseUrl}/api/admin/reset`, { method: 'POST' });
   assert.equal(unauthorized.status, 401);
 
+  const adminHeaders = { 'x-admin-token': 'test-admin-token', 'content-type': 'application/json' };
+  const wrongPassword = await fetch(`${baseUrl}/api/connect`, {
+    method: 'POST',
+    headers: adminHeaders,
+    body: JSON.stringify({ password: 'wrong' })
+  });
+  assert.equal(wrongPassword.status, 401);
+  assert.equal((await wrongPassword.json()).error, 'Senha incorreta.');
+  assert.equal(connectCalls, 0);
+
+  const validPassword = await fetch(`${baseUrl}/api/connect`, {
+    method: 'POST',
+    headers: adminHeaders,
+    body: JSON.stringify({ password: 'rofer' })
+  });
+  assert.equal(validPassword.status, 200);
+  assert.equal(connectCalls, 1);
+
+  const wrongAdminReconnectPassword = await fetch(`${baseUrl}/api/admin/reconnect`, {
+    method: 'POST',
+    headers: adminHeaders,
+    body: JSON.stringify({ password: 'wrong' })
+  });
+  assert.equal(wrongAdminReconnectPassword.status, 401);
+  assert.equal((await wrongAdminReconnectPassword.json()).error, 'Senha incorreta.');
+
+  const validAdminReconnectPassword = await fetch(`${baseUrl}/api/admin/reconnect`, {
+    method: 'POST',
+    headers: adminHeaders,
+    body: JSON.stringify({ password: 'rofer' })
+  });
+  assert.equal(validAdminReconnectPassword.status, 200);
+  assert.equal(connectCalls, 2);
+
   const initialSocketState = await waitForState(() => true);
   assert.deepEqual([initialSocketState.score.left, initialSocketState.score.right], [0, 0]);
 
   const handleGift = createGiftHandler({
     store,
     log: () => {},
-    onUpdate: () => io.emit('state', snapshot()),
+    onUpdate: publishGift,
     redGiftIds: new Set(),
     whiteGiftIds: new Set()
   });
+  const redGiftEvent = waitForGift('left');
   handleGift({ giftDetails: { giftName: 'Rose' }, giftId: 'red-real-name', repeatCount: 1, giftType: 0, msgId: 'red-1', user: { uniqueId: 'viewer_red' } });
   const redBroadcast = await waitForState(state => state.score.left === 1);
+  assert.equal((await redGiftEvent).quantity, 1);
   assert.deepEqual([redBroadcast.score.left, redBroadcast.score.right], [1, 0]);
 
+  const whiteGiftEvent = waitForGift('right');
   handleGift({ giftDetails: { giftName: 'White Rose' }, giftId: 'white-real-name', repeatCount: 1, giftType: 0, msgId: 'white-1', user: { uniqueId: 'viewer_white' } });
   const whiteBroadcast = await waitForState(state => state.score.right === 1);
+  assert.equal((await whiteGiftEvent).quantity, 1);
   assert.deepEqual([whiteBroadcast.score.left, whiteBroadcast.score.right], [1, 1]);
 
   const resetResponse = await fetch(`${baseUrl}/api/admin/reset`, {
