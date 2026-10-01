@@ -9,7 +9,7 @@ Placar de duas equipes atualizado em tempo real por presentes recebidos no chat 
 3. Execute `npm install` e depois `npm start`.
 4. Abra `http://localhost:3000` e o painel em `http://localhost:3000/admin`.
 
-O servidor não inicia a conexão TikTok ao subir. Clique em **CONECTAR LIVE** para iniciar diretamente a conexão real com `quiz_azul`; após iniciada, uma queda é reconectada automaticamente. O painel `/admin` e suas ações ficam acessíveis diretamente. A leitura do placar e o Socket.IO são públicos. A biblioteca lê a live pública sem cookies TikTok; um `TIKTOK_SIGN_API_KEY` é opcional, usado para elevar os limites de conexão do serviço de assinatura.
+O servidor não inicia a conexão TikTok ao subir. Clique em **CONECTAR LIVE** para iniciar diretamente a conexão real com `quiz_azul`; após uma conexão estabelecida cair, o WebSocket é reconectado automaticamente. O painel `/admin` e suas ações ficam acessíveis diretamente. A leitura do placar e o Socket.IO são públicos. A biblioteca lê a live pública sem cookies TikTok. A tentativa local mais recente encontrou `SignatureMissingTokensError`: o assinador Euler respondeu que é necessário plano Business. Para conectar, configure `TIKTOK_SIGN_API_KEY` com uma chave válida de uma conta/plano que permita assinar WebSockets TikTok; sem ela, o backend continua mostrando o erro real e não finge conexão.
 
 ## Presentes e identificação
 
@@ -25,7 +25,7 @@ Se o evento real usar outro nome, consulte a linha `[GIFT]` no log do servidor e
 
 O placar, os últimos presentes, logs e IDs recentes processados são gravados atomicamente em `SCORE_FILE` (por padrão `data/score.json`). A zeragem exige confirmação e mantém o histórico. Em ambientes efêmeros, como o disco padrão do Render, os dados somem em reinicializações; use um disco persistente.
 
-O `render.yaml` configura o serviço Node, health check e disco persistente em `/var/data`. Ao criar o Blueprint, configure os IDs reais confirmados para as rosas e, se necessário, a chave opcional de assinatura. O disco do Blueprint requer um plano Render com disco persistente.
+O `render.yaml` configura o serviço Node, health check e disco persistente em `/var/data`. Ao criar o Blueprint, configure os IDs reais confirmados para as rosas e `TIKTOK_SIGN_API_KEY` com uma chave de assinatura habilitada. O disco do Blueprint requer um plano Render com disco persistente.
 
 ## Verificações
 

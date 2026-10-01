@@ -29,6 +29,8 @@ class MockConnection extends EventEmitter {
     this.calls.push(['connect', roomId]);
     if (this.connectError) throw this.connectError;
     this.isConnected = true;
+    this.emit(ControlEvent.WEBSOCKET_CONNECTED, { open: true });
+    this.emit(ControlEvent.CONNECTED, { roomId });
     return { roomId };
   }
 
@@ -50,8 +52,12 @@ function createService(connection, logs = []) {
   });
 }
 
-test('offline preflight reports stale room ID and never attempts WebSocket or retries', async () => {
-  const connection = new MockConnection({ isLive: false, roomId: '7691492422651644680' });
+test('fetchIsLive=false does not block WebSocket attempt when a room ID exists', async () => {
+  const connection = new MockConnection({
+    isLive: false,
+    roomId: '7691492422651644680',
+    connectError: Object.assign(new Error('WebSocket rejected room'), { code: 'WS_REJECTED' })
+  });
   const logs = [];
   const service = createService(connection, logs);
   let retries = 0;
@@ -59,14 +65,17 @@ test('offline preflight reports stale room ID and never attempts WebSocket or re
 
   const state = await service.connect();
 
-  assert.deepEqual(connection.calls, ['fetchIsLive', 'fetchRoomId']);
+  assert.deepEqual(connection.calls, ['fetchIsLive', 'fetchRoomId', ['connect', '7691492422651644680']]);
   assert.equal(state.isLive, false);
   assert.equal(state.roomId, '7691492422651644680');
   assert.equal(state.connected, false);
-  assert.equal(state.error, '@quiz_azul não está ao vivo no momento.');
+  assert.equal(state.error, 'WebSocket rejected room');
+  assert.match(state.errorSummary, /WebSocket/);
   assert.equal(retries, 0);
-  assert.ok(logs.includes('[TIKTOK] Tentando conectar em @quiz_azul'));
-  assert.ok(logs.some(message => message.includes('roomId=7691492422651644680')));
+  assert.ok(logs.includes('[TIKTOK] Buscando LIVE de @quiz_azul...'));
+  assert.ok(logs.some(message => message.includes('[TIKTOK] Room ID encontrado: 7691492422651644680')));
+  assert.ok(logs.includes('[TIKTOK] Tentando conexão WebSocket...'));
+  assert.ok(logs.some(message => message.includes('code: WS_REJECTED')));
 });
 
 test('online room ID is passed to connect and connected is true only after WebSocket opens', async () => {
@@ -80,10 +89,10 @@ test('online room ID is passed to connect and connected is true only after WebSo
   assert.equal(state.isLive, true);
   assert.equal(state.roomId, 'room-live-123');
   assert.equal(state.connected, true);
-  assert.ok(logs.some(message => message.includes('[TIKTOK] WebSocket conectado em @quiz_azul')));
+  assert.ok(logs.some(message => message.includes('[TIKTOK] CONECTADO À LIVE! @quiz_azul')));
 });
 
-test('WebSocket signing failure logs message, name, code, stack, and room ID and keeps retry enabled while live', async () => {
+test('initial WebSocket signing failure logs diagnostics and does not start an unbounded retry loop', async () => {
   const error = Object.assign(new Error('Euler requires a Business plan'), { code: 'PREMIUM_REQUIRED' });
   const connection = new MockConnection({ isLive: true, roomId: 'room-live-456', connectError: error });
   const logs = [];
@@ -101,7 +110,7 @@ test('WebSocket signing failure logs message, name, code, stack, and room ID and
   assert.match(errorLog, /PREMIUM_REQUIRED/);
   assert.match(errorLog, /roomId: room-live-456/);
   assert.match(errorLog, /stack:/);
-  assert.equal(retries, 1);
+  assert.equal(retries, 0);
 });
 
 test('an online WebSocket disconnect schedules automatic reconnection', async () => {

@@ -64,7 +64,10 @@ async function connectTikTok(_request, response) {
   const result = await tiktok.connect(true);
   const state = snapshot();
   if (!result.connected) {
-    const statusCode = result.isLive === false ? 409 : 502;
+    const confirmedOffline = result.isLive === false
+      && !result.roomId
+      && result.error === `@${username} não está ao vivo no momento.`;
+    const statusCode = confirmedOffline ? 409 : 502;
     return response.status(statusCode).json({ ...state, error: result.error, errorSummary: result.errorSummary });
   }
   return response.json(state);

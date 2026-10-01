@@ -26,8 +26,10 @@ test('serves the live score, allows direct admin and live actions, and broadcast
   const originalDisconnect = tiktok.disconnect;
   let connectCalls = 0;
   let disconnectCalls = 0;
+  let nextConnectResult = null;
   tiktok.connect = async () => {
     connectCalls += 1;
+    if (nextConnectResult) return nextConnectResult;
     return { ...tiktok.getStatus(), connected: true, isLive: true, roomId: 'room-test', error: null, errorSummary: null };
   };
   tiktok.disconnect = async () => {
@@ -111,6 +113,25 @@ test('serves the live score, allows direct admin and live actions, and broadcast
   });
   assert.equal(adminReconnectResponse.status, 200);
   assert.equal(connectCalls, 2);
+
+  nextConnectResult = {
+    ...tiktok.getStatus(),
+    connected: false,
+    isLive: false,
+    roomId: 'stale-room-id',
+    error: 'Euler rejected WebSocket signature',
+    errorSummary: 'Falha na conexão WebSocket do TikTok: Euler rejected WebSocket signature'
+  };
+  const websocketFailure = await fetch(`${baseUrl}/api/connect`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password: 'rofer' })
+  });
+  assert.equal(websocketFailure.status, 502);
+  const websocketFailureBody = await websocketFailure.json();
+  assert.equal(websocketFailureBody.error, 'Euler rejected WebSocket signature');
+  assert.match(websocketFailureBody.errorSummary, /WebSocket/);
+  nextConnectResult = null;
 
   const rejectedDisconnect = await fetch(`${baseUrl}/api/disconnect`, {
     method: 'POST',
