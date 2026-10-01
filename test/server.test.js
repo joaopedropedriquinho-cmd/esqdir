@@ -8,11 +8,10 @@ import { io as createSocket } from 'socket.io-client';
 import { createGiftHandler } from '../lib/gift-rules.js';
 
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'live-battle-server-'));
-process.env.LIVE_START_PASSWORD = 'rofer';
 process.env.SCORE_FILE = path.join(temporaryDirectory, 'score.json');
 const { server, io, store, snapshot, publishGift, tiktok } = await import('../server.js');
 
-test('serves the live score, protects admin APIs, and broadcasts over Socket.IO', async t => {
+test('serves the live score, allows direct admin and live actions, and broadcasts over Socket.IO', async t => {
   server.listen(0);
   if (!server.listening) {
     await Promise.race([
@@ -24,13 +23,20 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
   const baseUrl = `http://127.0.0.1:${address.port}`;
   const client = createSocket(baseUrl, { transports: ['websocket'], forceNew: true });
   const originalConnect = tiktok.connect;
+  const originalDisconnect = tiktok.disconnect;
   let connectCalls = 0;
+  let disconnectCalls = 0;
   tiktok.connect = async () => {
     connectCalls += 1;
     return tiktok.getStatus();
   };
+  tiktok.disconnect = async () => {
+    disconnectCalls += 1;
+    return tiktok.getStatus();
+  };
   t.after(async () => {
     tiktok.connect = originalConnect;
+    tiktok.disconnect = originalDisconnect;
     client.close();
     io.close();
     await new Promise(resolve => server.close(resolve));
@@ -77,42 +83,21 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
   const initialResponse = await fetch(`${baseUrl}/api/state`);
   const initialState = await initialResponse.json();
   assert.deepEqual([initialState.score.left, initialState.score.right], [0, 0]);
-  const unauthorized = await fetch(`${baseUrl}/api/admin/reset`, { method: 'POST' });
-  assert.equal(unauthorized.status, 401);
-
-  const systemHeaders = { 'x-system-password': 'rofer' };
-  const adminState = await fetch(`${baseUrl}/api/admin/state`, { headers: systemHeaders });
+  const adminState = await fetch(`${baseUrl}/api/admin/state`);
   assert.equal(adminState.status, 200);
   assert.equal((await adminState.json()).live.username, 'quiz_azul');
 
-  const wrongPassword = await fetch(`${baseUrl}/api/connect`, {
-    method: 'POST',
-    headers: { 'x-system-password': 'wrong' }
-  });
-  assert.equal(wrongPassword.status, 401);
-  assert.equal((await wrongPassword.json()).error, 'Senha incorreta.');
-  assert.equal(connectCalls, 0);
-
-  const validPassword = await fetch(`${baseUrl}/api/connect`, {
-    method: 'POST',
-    headers: systemHeaders
-  });
-  assert.equal(validPassword.status, 200);
+  const connectResponse = await fetch(`${baseUrl}/api/connect`, { method: 'POST' });
+  assert.equal(connectResponse.status, 200);
   assert.equal(connectCalls, 1);
 
-  const wrongAdminReconnectPassword = await fetch(`${baseUrl}/api/admin/reconnect`, {
-    method: 'POST',
-    headers: { 'x-system-password': 'wrong' }
-  });
-  assert.equal(wrongAdminReconnectPassword.status, 401);
-  assert.equal((await wrongAdminReconnectPassword.json()).error, 'Senha incorreta.');
-
-  const validAdminReconnectPassword = await fetch(`${baseUrl}/api/admin/reconnect`, {
-    method: 'POST',
-    headers: systemHeaders
-  });
-  assert.equal(validAdminReconnectPassword.status, 200);
+  const adminReconnectResponse = await fetch(`${baseUrl}/api/admin/reconnect`, { method: 'POST' });
+  assert.equal(adminReconnectResponse.status, 200);
   assert.equal(connectCalls, 2);
+
+  const disconnectResponse = await fetch(`${baseUrl}/api/disconnect`, { method: 'POST' });
+  assert.equal(disconnectResponse.status, 200);
+  assert.equal(disconnectCalls, 1);
 
   const initialSocketState = await waitForState(() => true);
   assert.deepEqual([initialSocketState.score.left, initialSocketState.score.right], [0, 0]);
@@ -137,8 +122,7 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
   assert.deepEqual([whiteBroadcast.score.left, whiteBroadcast.score.right], [1, 1]);
 
   const resetResponse = await fetch(`${baseUrl}/api/admin/reset`, {
-    method: 'POST',
-    headers: systemHeaders
+    method: 'POST'
   });
   assert.equal(resetResponse.status, 200);
   const broadcast = await waitForState(state => state.score.logs[0]?.message === 'Placar zerado pelo painel de administração.');

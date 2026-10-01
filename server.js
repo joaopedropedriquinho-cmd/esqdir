@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import crypto from 'node:crypto';
 import express from 'express';
 import helmet from 'helmet';
 import http from 'node:http';
@@ -60,35 +59,22 @@ io.on('connection', socket => socket.emit('state', snapshot()));
 app.get('/admin', (_request, response) => response.sendFile(path.join(root, 'public', 'admin.html')));
 app.get('/api/state', (_request, response) => response.json(snapshot()));
 
-function requirePassword(request, response, next) {
-  const expected = process.env.LIVE_START_PASSWORD;
-  if (!expected) {
-    return response.status(503).json({ error: 'Configure LIVE_START_PASSWORD no ambiente do servidor.' });
-  }
-  const expectedBuffer = Buffer.from(expected);
-  const suppliedBuffer = Buffer.from(request.get('x-system-password') || '');
-  if (expectedBuffer.length !== suppliedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)) {
-    return response.status(401).json({ error: 'Senha incorreta.' });
-  }
-  return next();
-}
-
-app.post('/api/connect', requirePassword, async (_request, response) => {
+app.post('/api/connect', async (_request, response) => {
   await tiktok.connect(true);
   response.json(snapshot());
 });
-app.post('/api/disconnect', requirePassword, async (_request, response) => {
+app.post('/api/disconnect', async (_request, response) => {
   await tiktok.disconnect();
   response.json(snapshot());
 });
-app.get('/api/admin/state', requirePassword, (_request, response) => response.json(snapshot()));
-app.post('/api/admin/reset', requirePassword, (_request, response) => {
+app.get('/api/admin/state', (_request, response) => response.json(snapshot()));
+app.post('/api/admin/reset', (_request, response) => {
   store.reset();
   console.log('[ADMIN] Placar zerado.');
   broadcast();
   response.json(snapshot());
 });
-app.post('/api/admin/reconnect', requirePassword, async (_request, response) => {
+app.post('/api/admin/reconnect', async (_request, response) => {
   response.json(await tiktok.connect(true));
   broadcast();
 });

@@ -6,9 +6,6 @@ const rightScore = document.querySelector('#right-score');
 const eventFeed = document.querySelector('#event-feed');
 const liveStatus = document.querySelector('#live-status');
 const connectionNote = document.querySelector('#connection-note');
-const startLiveDialog = document.querySelector('#start-live-dialog');
-const startLivePassword = document.querySelector('#start-live-password');
-const startLiveError = document.querySelector('#start-live-error');
 const roseAlert = document.querySelector('#rose-alert');
 let lastEventId = null;
 let hasInitialState = false;
@@ -102,44 +99,20 @@ socket.on('gift', event => roseAlertQueue.enqueue(event));
 socket.on('connect_error', () => { connectionNote.textContent = 'Atualização em tempo real indisponível.'; });
 socket.on('connect', () => { if (socket.connected) connectionNote.textContent = ''; });
 
-async function requestConnection(path, password) {
-  if (!password) return;
+async function requestConnection(path) {
   const buttons = [...document.querySelectorAll('.topbar button')];
   buttons.forEach(button => { button.disabled = true; });
   try {
-    const response = await fetch(path, {
-      method: 'POST',
-      headers: { 'x-system-password': password }
-    });
+    const response = await fetch(path, { method: 'POST' });
     const state = await response.json();
     if (!response.ok) throw new Error(state.error || 'Falha na solicitação.');
     render(state);
-    if (path === '/api/connect') startLiveDialog.close();
   } catch (error) {
-    if (path === '/api/connect') {
-      startLiveError.textContent = error.message;
-      if (error.message === 'Senha incorreta.') startLivePassword.value = '';
-      startLivePassword.focus();
-    } else {
-      connectionNote.textContent = error.message;
-    }
+    connectionNote.textContent = error.message;
   } finally {
     buttons.forEach(button => { button.disabled = false; });
   }
 }
 
-document.querySelector('#connect-button').addEventListener('click', () => {
-  startLiveError.textContent = '';
-  startLivePassword.value = '';
-  startLiveDialog.showModal();
-  startLivePassword.focus();
-});
-document.querySelector('#start-live-form').addEventListener('submit', event => {
-  event.preventDefault();
-  requestConnection('/api/connect', startLivePassword.value);
-});
-document.querySelector('#cancel-start-live').addEventListener('click', () => startLiveDialog.close());
-document.querySelector('#disconnect-button').addEventListener('click', () => {
-  const password = window.prompt('Senha do sistema');
-  if (password !== null) requestConnection('/api/disconnect', password);
-});
+document.querySelector('#connect-button').addEventListener('click', () => requestConnection('/api/connect'));
+document.querySelector('#disconnect-button').addEventListener('click', () => requestConnection('/api/disconnect'));

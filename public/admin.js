@@ -1,10 +1,6 @@
 const socket = io();
-const passwordInput = document.querySelector('#admin-password');
-const loginForm = document.querySelector('#login-form');
-const loginMessage = document.querySelector('#login-message');
 const content = document.querySelector('#admin-content');
 const actionMessage = document.querySelector('#action-message');
-let password = '';
 
 function row(mainText, metaText = '', logRow = false) {
   const item = document.createElement('div');
@@ -33,31 +29,16 @@ function render({ score, live }) {
 }
 
 async function loadState() {
-  const response = await fetch('/api/admin/state', { headers: { 'x-system-password': password } });
+  const response = await fetch('/api/admin/state');
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || 'Falha ao acessar o painel.');
-  content.classList.remove('is-locked');
-  loginMessage.textContent = 'Acesso autorizado.';
   render(data);
 }
 
-loginForm.addEventListener('submit', async event => {
-  event.preventDefault();
-  password = passwordInput.value;
-  try {
-    await loadState();
-    passwordInput.value = '';
-  } catch (error) {
-    password = '';
-    loginMessage.textContent = error.message;
-  }
-});
-
-socket.on('state', data => { if (password) render(data); });
+socket.on('state', render);
 socket.on('connect_error', () => { actionMessage.textContent = 'Tempo real desconectado.'; });
 
 async function adminRequest(path, confirm = false) {
-  if (!password) return;
   if (confirm) {
     const dialog = document.querySelector('#reset-dialog');
     dialog.showModal();
@@ -66,18 +47,9 @@ async function adminRequest(path, confirm = false) {
   }
   actionMessage.textContent = 'Processando...';
   try {
-    const response = await fetch(path, {
-      method: 'POST',
-      headers: { 'x-system-password': password }
-    });
+    const response = await fetch(path, { method: 'POST' });
     const data = await response.json();
-    if (!response.ok) {
-      if (response.status === 401) {
-        password = '';
-        content.classList.add('is-locked');
-      }
-      throw new Error(data.error || 'Falha na solicitação.');
-    }
+    if (!response.ok) throw new Error(data.error || 'Falha na solicitação.');
     render(data);
     actionMessage.textContent = 'Concluído.';
   } catch (error) {
@@ -87,3 +59,5 @@ async function adminRequest(path, confirm = false) {
 
 document.querySelector('#reset-button').addEventListener('click', () => adminRequest('/api/admin/reset', true));
 document.querySelector('#reconnect-button').addEventListener('click', () => adminRequest('/api/admin/reconnect'));
+
+loadState().catch(error => { actionMessage.textContent = error.message; });
