@@ -5,6 +5,7 @@ const eventFeed = document.querySelector('#event-feed');
 const liveStatus = document.querySelector('#live-status');
 const connectionNote = document.querySelector('#connection-note');
 let lastEventId = null;
+let hasInitialState = false;
 
 function addEvent(event) {
   const row = document.createElement('div');
@@ -52,17 +53,20 @@ function render({ score, live }) {
   connectionNote.textContent = live.error ? `Conexão: ${live.error}` : '';
 
   const newest = score.events?.[0];
+  if (!hasInitialState) {
+    [...(score.events ?? [])].reverse().slice(-4).forEach(addEvent);
+    lastEventId = newest?.id ?? null;
+    hasInitialState = true;
+    return;
+  }
   if (newest && newest.id !== lastEventId) {
+    addEvent(newest);
+    animateTeam(newest.team, newest.quantity);
     lastEventId = newest.id;
-    if (newest.id !== window.initialEventId) {
-      addEvent(newest);
-      animateTeam(newest.team, newest.quantity);
-    }
   }
 }
 
 fetch('/api/state').then(response => response.json()).then(state => {
-  window.initialEventId = state.score.events?.[0]?.id;
   render(state);
 }).catch(() => { connectionNote.textContent = 'Não foi possível carregar o placar.'; });
 socket.on('state', render);
@@ -70,12 +74,18 @@ socket.on('connect_error', () => { connectionNote.textContent = 'Atualização e
 socket.on('connect', () => { if (socket.connected) connectionNote.textContent = ''; });
 
 async function requestConnection(path) {
+  const token = window.adminToken || window.prompt('Informe o token ADMIN_TOKEN para controlar a conexão:');
+  if (!token) return;
+  window.adminToken = token;
   const buttons = [...document.querySelectorAll('.topbar button')];
   buttons.forEach(button => { button.disabled = true; });
   try {
-    const response = await fetch(path, { method: 'POST' });
+    const response = await fetch(path, { method: 'POST', headers: { 'x-admin-token': token } });
     const state = await response.json();
-    if (!response.ok) throw new Error(state.error || 'Falha na solicitação.');
+    if (!response.ok) {
+      if (response.status === 401) window.adminToken = '';
+      throw new Error(state.error || 'Falha na solicitação.');
+    }
     render(state);
   } catch (error) {
     connectionNote.textContent = error.message;

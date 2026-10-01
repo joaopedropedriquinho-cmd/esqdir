@@ -21,6 +21,8 @@ test('scores only completed gift streaks, honors quantity, and ignores duplicate
     hasProcessedGift: id => processed.has(id),
     markGiftProcessed: id => processed.add(id),
     addGift: event => {
+      if (event.dedupeId && processed.has(event.dedupeId)) return null;
+      if (event.dedupeId) processed.add(event.dedupeId);
       state[event.team] += event.quantity;
       events.push(event);
       return event;

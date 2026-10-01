@@ -70,10 +70,19 @@ function requireAdmin(request, response, next) {
   return next();
 }
 
+app.post('/api/connect', requireAdmin, async (_request, response) => {
+  await tiktok.connect(true);
+  response.json(snapshot());
+});
+app.post('/api/disconnect', requireAdmin, async (_request, response) => {
+  await tiktok.disconnect();
+  response.json(snapshot());
+});
 app.get('/api/admin/state', requireAdmin, (_request, response) => response.json(snapshot()));
 app.post('/api/admin/reset', requireAdmin, (_request, response) => {
   store.reset();
-  log('[ADMIN] Placar zerado.');
+  console.log('[ADMIN] Placar zerado.');
+  broadcast();
   response.json(snapshot());
 });
 app.post('/api/admin/reconnect', requireAdmin, async (_request, response) => {
@@ -81,18 +90,23 @@ app.post('/api/admin/reconnect', requireAdmin, async (_request, response) => {
   broadcast();
 });
 
-app.get('*', (request, response, next) => {
+app.use((request, response, next) => {
   if (request.path.startsWith('/api/')) return response.status(404).json({ error: 'Rota não encontrada.' });
   return next();
 });
 
-server.listen(port, () => {
-  console.log(`Live Battle disponível em http://localhost:${port}`);
-  tiktok.connect(false);
-});
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  server.listen(port, () => {
+    console.log(`Live Battle disponível em http://localhost:${port}`);
+    tiktok.connect(false);
+  });
 
-function shutdown() {
-  tiktok.disconnect().finally(() => server.close(() => process.exit(0)));
+  function shutdown() {
+    tiktok.disconnect().finally(() => server.close(() => process.exit(0)));
+  }
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+
+export { server, io, store, tiktok, snapshot };
