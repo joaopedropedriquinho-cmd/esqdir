@@ -36,8 +36,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--yellow); outlin
 .team__score { z-index: 1; margin-top: 65px; font-family: 'Barlow Condensed', sans-serif; font-size: clamp(118px, 27vw, 410px); font-weight: 900; line-height: .78; font-variant-numeric: tabular-nums; letter-spacing: 0; text-shadow: 0 12px 55px rgba(51,0,0,.2); transition: transform .22s cubic-bezier(.2,.8,.2,1), filter .22s; }
 .team--right .team__score { text-shadow: 0 12px 55px rgba(0,38,19,.24); }
 .team__score.is-bump { transform: scale(1.08); filter: brightness(1.25); }
-.team__label { margin-top: 19px; color: rgba(255,255,255,.67); font-size: 10px; font-weight: 700; letter-spacing: .38em; }
-.team__foot { position: absolute; right: 5.5%; bottom: 31px; left: 5.5%; display: flex; justify-content: space-between; align-items: center; color: rgba(255,255,255,.72); font-size: 9px; font-weight: 700; letter-spacing: .15em; }
+.team__label { margin-top: 12px; color: #fff2b3; font-family: 'Barlow Condensed', sans-serif; font-size: clamp(20px, 2.1vw, 32px); font-weight: 900; line-height: 1; letter-spacing: .07em; text-align: center; text-shadow: 0 2px 14px rgba(0,0,0,.28), 0 0 18px rgba(255,228,92,.35); }
+.team__foot { position: absolute; right: 5.5%; bottom: 31px; left: 5.5%; display: flex; justify-content: flex-end; align-items: center; color: rgba(255,255,255,.72); font-size: 9px; font-weight: 700; letter-spacing: .15em; }
 .team__foot-mark { color: var(--yellow); font-size: 18px; }
 .score-pop { position: absolute; top: 54%; z-index: 3; color: var(--yellow); font-family: 'Barlow Condensed', sans-serif; font-size: clamp(39px, 7vw, 95px); font-weight: 900; opacity: 0; pointer-events: none; text-shadow: 0 4px 30px rgba(0,0,0,.35); }
 .score-pop.is-visible { animation: pop-up .9s ease-out both; }
@@ -75,6 +75,16 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--yellow); outlin
 .admin-link { position: absolute; right: 20px; bottom: 29px; z-index: 4; color: rgba(255,255,255,.7); font-size: 8px; font-weight: 700; letter-spacing: .13em; text-decoration: none; }
 .admin-link span { color: var(--yellow); font-size: 12px; }
 .connection-note { position: absolute; right: 20px; bottom: 52px; z-index: 4; max-width: 300px; color: rgba(255,255,255,.77); font-size: 10px; text-align: right; }
+
+.live-action-dialog { width: min(400px, calc(100% - 28px)); padding: clamp(22px, 5vw, 32px); border: 1px solid rgba(255,228,92,.42); border-radius: 5px; background: #171912; color: var(--ink); box-shadow: 0 22px 90px rgba(0,0,0,.6); }
+.live-action-dialog::backdrop { background: rgba(7,8,6,.78); backdrop-filter: blur(5px); }
+.live-action-dialog__eyebrow { margin: 0 0 6px; color: var(--yellow); font-size: 9px; font-weight: 700; letter-spacing: .17em; }
+.live-action-dialog h1 { margin: 0 0 20px; font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 800; }
+.live-action-dialog label { display: block; margin-bottom: 8px; color: rgba(255,255,255,.76); font-size: 11px; font-weight: 600; }
+.live-action-dialog input { width: 100%; min-height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,.25); border-radius: 3px; background: #22251d; color: white; font: inherit; }
+.live-action-dialog input:focus { border-color: var(--yellow); outline: 2px solid rgba(255,228,92,.22); }
+.live-action-dialog__error { min-height: 16px; margin: 8px 0 0; color: #ff857c; font-size: 11px; }
+.live-action-dialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 
 .rose-alert { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: clamp(12px, 3vw, 42px); overflow: hidden; visibility: hidden; opacity: 0; background: rgba(8,10,8,.72); backdrop-filter: blur(5px); pointer-events: none; transition: opacity .25s ease, visibility .25s; }
 .rose-alert.is-visible { visibility: visible; opacity: 1; }
@@ -115,7 +125,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--yellow); outlin
   .star { width: clamp(44px, 11vw, 72px); }
   .right-mark { font-size: clamp(41px, 10vw, 65px); }
   .team__score { margin-top: 25px; font-size: clamp(100px, 28vw, 220px); }
-  .team__label { margin-top: 13px; font-size: 8px; }
+  .team__label { margin-top: 8px; font-size: clamp(14px, 4vw, 21px); letter-spacing: .04em; }
   .team__foot { bottom: 17px; font-size: 7px; }
   .topbar { width: calc(100% - 20px); min-height: 44px; gap: 9px; padding: 6px 8px; }
   .live-status { gap: 5px; font-size: 7px; letter-spacing: 0; }

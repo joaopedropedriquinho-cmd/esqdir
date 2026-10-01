@@ -27,6 +27,19 @@
       <div class="admin-columns"><section class="admin-list"><header><h2>ÚLTIMOS PRESENTES</h2><span>20 MAIS RECENTES</span></header><div id="admin-gifts" class="admin-rows"></div></section><section class="admin-list"><header><h2>LOG DE EVENTOS</h2><span>100 MAIS RECENTES</span></header><div id="admin-logs" class="admin-rows"></div></section></div>
     </section>
   </main>
+  <dialog class="live-action-dialog" id="admin-live-action-dialog" aria-labelledby="admin-live-action-title">
+    <form id="admin-live-action-form">
+      <p class="live-action-dialog__eyebrow">LIVE BATTLE / ACESSO</p>
+      <h1 id="admin-live-action-title">Reconectar live</h1>
+      <label for="admin-live-action-password">Senha</label>
+      <input id="admin-live-action-password" type="password" autocomplete="current-password" required>
+      <p class="live-action-dialog__error" id="admin-live-action-error" role="alert"></p>
+      <div class="live-action-dialog__actions">
+        <button class="admin-button admin-button--muted" id="cancel-admin-live-action" type="button">CANCELAR</button>
+        <button class="admin-button" type="submit">CONTINUAR</button>
+      </div>
+    </form>
+  </dialog>
   <dialog id="reset-dialog" class="confirm-dialog"><form method="dialog"><p>ZERAR O PLACAR?</p><span>Os pontos voltarão a zero. O histórico de presentes será mantido.</span><div><button value="cancel" class="admin-button admin-button--muted">CANCELAR</button><button value="confirm" class="admin-button admin-button--danger">ZERAR</button></div></form></dialog>
 </body>
 </html>

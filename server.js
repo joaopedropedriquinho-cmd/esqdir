@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import crypto from 'node:crypto';
 import express from 'express';
 import helmet from 'helmet';
 import http from 'node:http';
@@ -69,8 +70,17 @@ async function connectTikTok(_request, response) {
   return response.json(state);
 }
 
-app.post('/api/connect', connectTikTok);
-app.post('/api/disconnect', async (_request, response) => {
+function requireLiveActionPassword(request, response, next) {
+  const expected = Buffer.from('rofer');
+  const supplied = Buffer.from(typeof request.body?.password === 'string' ? request.body.password : '');
+  if (expected.length !== supplied.length || !crypto.timingSafeEqual(expected, supplied)) {
+    return response.status(401).json({ error: 'Senha incorreta' });
+  }
+  return next();
+}
+
+app.post('/api/connect', requireLiveActionPassword, connectTikTok);
+app.post('/api/disconnect', requireLiveActionPassword, async (_request, response) => {
   await tiktok.disconnect();
   response.json(snapshot());
 });
@@ -81,7 +91,7 @@ app.post('/api/admin/reset', (_request, response) => {
   broadcast();
   response.json(snapshot());
 });
-app.post('/api/admin/reconnect', connectTikTok);
+app.post('/api/admin/reconnect', requireLiveActionPassword, connectTikTok);
 
 app.use((request, response, next) => {
   if (request.path.startsWith('/api/')) return response.status(404).json({ error: 'Rota não encontrada.' });

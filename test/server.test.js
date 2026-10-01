@@ -87,15 +87,45 @@ test('serves the live score, allows direct admin and live actions, and broadcast
   assert.equal(adminState.status, 200);
   assert.equal((await adminState.json()).live.username, 'quiz_azul');
 
-  const connectResponse = await fetch(`${baseUrl}/api/connect`, { method: 'POST' });
+  const rejectedConnect = await fetch(`${baseUrl}/api/connect`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password: 'incorreta' })
+  });
+  assert.equal(rejectedConnect.status, 401);
+  assert.equal((await rejectedConnect.json()).error, 'Senha incorreta');
+  assert.equal(connectCalls, 0);
+
+  const connectResponse = await fetch(`${baseUrl}/api/connect`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password: 'rofer' })
+  });
   assert.equal(connectResponse.status, 200);
   assert.equal(connectCalls, 1);
 
-  const adminReconnectResponse = await fetch(`${baseUrl}/api/admin/reconnect`, { method: 'POST' });
+  const adminReconnectResponse = await fetch(`${baseUrl}/api/admin/reconnect`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password: 'rofer' })
+  });
   assert.equal(adminReconnectResponse.status, 200);
   assert.equal(connectCalls, 2);
 
-  const disconnectResponse = await fetch(`${baseUrl}/api/disconnect`, { method: 'POST' });
+  const rejectedDisconnect = await fetch(`${baseUrl}/api/disconnect`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password: 'incorreta' })
+  });
+  assert.equal(rejectedDisconnect.status, 401);
+  assert.equal((await rejectedDisconnect.json()).error, 'Senha incorreta');
+  assert.equal(disconnectCalls, 0);
+
+  const disconnectResponse = await fetch(`${baseUrl}/api/disconnect`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ password: 'rofer' })
+  });
   assert.equal(disconnectResponse.status, 200);
   assert.equal(disconnectCalls, 1);
 

@@ -58,6 +58,45 @@ async function adminRequest(path, confirm = false) {
 }
 
 document.querySelector('#reset-button').addEventListener('click', () => adminRequest('/api/admin/reset', true));
-document.querySelector('#reconnect-button').addEventListener('click', () => adminRequest('/api/admin/reconnect'));
+const liveActionDialog = document.querySelector('#admin-live-action-dialog');
+const liveActionPassword = document.querySelector('#admin-live-action-password');
+const liveActionError = document.querySelector('#admin-live-action-error');
+
+document.querySelector('#reconnect-button').addEventListener('click', () => {
+  liveActionError.textContent = '';
+  liveActionPassword.value = '';
+  liveActionDialog.showModal();
+  liveActionPassword.focus();
+});
+document.querySelector('#cancel-admin-live-action').addEventListener('click', () => liveActionDialog.close());
+document.querySelector('#admin-live-action-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  button.disabled = true;
+  try {
+    const response = await fetch('/api/admin/reconnect', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password: liveActionPassword.value })
+    });
+    const data = await response.json();
+    if (response.status === 401) {
+      liveActionError.textContent = 'Senha incorreta';
+      liveActionPassword.value = '';
+      liveActionPassword.focus();
+      return;
+    }
+    render(data);
+    liveActionDialog.close();
+    actionMessage.textContent = response.ok && data.live.connected
+      ? 'Conectada.'
+      : data.errorSummary || data.live.errorSummary || data.error || 'Não foi possível conectar.';
+  } catch (error) {
+    liveActionDialog.close();
+    actionMessage.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
 
 loadState().catch(error => { actionMessage.textContent = error.message; });

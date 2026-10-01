@@ -20,9 +20,9 @@
         <p class="team__name">ESQUERDA</p>
       </div>
       <div class="team__score" id="left-score" aria-live="polite">0</div>
-      <div class="team__label">PONTOS</div>
+      <div class="team__label">ROSA VERMELHA</div>
       <div class="score-pop" id="left-pop" aria-hidden="true"></div>
-      <div class="team__foot"><span>ROSA VERMELHA</span><span class="team__foot-mark">✳</span></div>
+      <div class="team__foot"><span class="team__foot-mark">✳</span></div>
     </section>
 
     <section class="team team--right" aria-label="Equipe direita">
@@ -33,15 +33,15 @@
         <p class="team__name">DIREITA</p>
       </div>
       <div class="team__score" id="right-score" aria-live="polite">0</div>
-      <div class="team__label">PONTOS</div>
+      <div class="team__label">ROSA BRANCA</div>
       <div class="score-pop" id="right-pop" aria-hidden="true"></div>
-      <div class="team__foot"><span>ROSA BRANCA</span><span class="team__foot-mark">✳</span></div>
+      <div class="team__foot"><span class="team__foot-mark">✳</span></div>
     </section>
 
     <div class="topbar">
       <div class="live-status" id="live-status"><span class="live-status__dot"></span><span id="live-label">LIVE DESCONECTADA</span></div>
       <a class="account" href="https://www.tiktok.com/@quiz_azul/live" target="_blank" rel="noreferrer"><span class="account__at">@</span><span id="account-name">quiz_azul</span></a>
-      <div class="topbar__actions"><button class="small-button" id="connect-button" type="button">CONECTAR LIVE</button><button class="small-button small-button--quiet" id="disconnect-button" type="button">DESCONECTAR</button></div>
+      <div class="topbar__actions"><button class="small-button" id="connect-button" type="button">CONECTAR LIVE</button><button class="small-button small-button--quiet" id="disconnect-button" type="button">DESCONECTAR LIVE</button></div>
     </div>
 
     <div class="matchup" aria-label="Placar central">
@@ -53,6 +53,20 @@
     <a class="admin-link" href="/admin" aria-label="Abrir painel de administração">PAINEL <span>↗</span></a>
     <div class="connection-note" id="connection-note" aria-live="polite"></div>
   </main>
+
+  <dialog class="live-action-dialog" id="live-action-dialog" aria-labelledby="live-action-title">
+    <form id="live-action-form">
+      <p class="live-action-dialog__eyebrow">LIVE BATTLE / ACESSO</p>
+      <h1 id="live-action-title">Confirmar ação</h1>
+      <label for="live-action-password">Senha</label>
+      <input id="live-action-password" type="password" autocomplete="current-password" required>
+      <p class="live-action-dialog__error" id="live-action-error" role="alert"></p>
+      <div class="live-action-dialog__actions">
+        <button class="small-button small-button--quiet" id="cancel-live-action" type="button">CANCELAR</button>
+        <button class="small-button" id="submit-live-action" type="submit">CONTINUAR</button>
+      </div>
+    </form>
+  </dialog>
 
   <div class="rose-alert" id="rose-alert" aria-hidden="true" aria-live="assertive">
     <div class="rose-alert__panel" role="status">

@@ -7,8 +7,12 @@ const eventFeed = document.querySelector('#event-feed');
 const liveStatus = document.querySelector('#live-status');
 const connectionNote = document.querySelector('#connection-note');
 const roseAlert = document.querySelector('#rose-alert');
+const liveActionDialog = document.querySelector('#live-action-dialog');
+const liveActionPassword = document.querySelector('#live-action-password');
+const liveActionError = document.querySelector('#live-action-error');
 let lastEventId = null;
 let hasInitialState = false;
+let pendingLiveAction = null;
 
 function addEvent(event) {
   const row = document.createElement('div');
@@ -101,18 +105,39 @@ socket.on('gift', event => roseAlertQueue.enqueue(event));
 socket.on('connect_error', () => { connectionNote.textContent = 'Atualização em tempo real indisponível.'; });
 socket.on('connect', () => { if (socket.connected) connectionNote.textContent = ''; });
 
-async function requestConnection(path) {
+function requestConnection(path) {
+  pendingLiveAction = path;
+  liveActionError.textContent = '';
+  liveActionPassword.value = '';
+  document.querySelector('#live-action-title').textContent = path === '/api/disconnect' ? 'Desconectar live' : 'Conectar live';
+  liveActionDialog.showModal();
+  liveActionPassword.focus();
+}
+
+async function submitLiveAction(password) {
   const buttons = [...document.querySelectorAll('.topbar button')];
   buttons.forEach(button => { button.disabled = true; });
   try {
-    const response = await fetch(path, { method: 'POST' });
+    const response = await fetch(pendingLiveAction, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
     const state = await response.json();
+    if (response.status === 401) {
+      liveActionError.textContent = 'Senha incorreta';
+      liveActionPassword.value = '';
+      liveActionPassword.focus();
+      return;
+    }
     render(state);
     if (!response.ok) {
       connectionNote.textContent = state.errorSummary || state.error || 'Não foi possível conectar à live.';
     }
+    liveActionDialog.close();
   } catch (error) {
     connectionNote.textContent = `Não foi possível conectar: ${error.message}`;
+    liveActionDialog.close();
   } finally {
     buttons.forEach(button => { button.disabled = false; });
   }
@@ -120,3 +145,8 @@ async function requestConnection(path) {
 
 document.querySelector('#connect-button').addEventListener('click', () => requestConnection('/api/connect'));
 document.querySelector('#disconnect-button').addEventListener('click', () => requestConnection('/api/disconnect'));
+document.querySelector('#live-action-form').addEventListener('submit', event => {
+  event.preventDefault();
+  submitLiveAction(liveActionPassword.value);
+});
+document.querySelector('#cancel-live-action').addEventListener('click', () => liveActionDialog.close());
