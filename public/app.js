@@ -75,7 +75,9 @@ function render({ score, live }) {
   document.querySelector('#account-name').textContent = live.username || 'quiz_azul';
   liveStatus.classList.toggle('is-connected', live.connected);
   document.querySelector('#live-label').textContent = live.connected ? 'LIVE CONECTADA' : live.connecting ? 'CONECTANDO LIVE' : 'LIVE DESCONECTADA';
-  connectionNote.textContent = live.error ? `Conexão: ${live.error}` : '';
+  connectionNote.textContent = live.error
+    ? (live.errorSummary || `Não foi possível conectar: ${live.error}`)
+    : '';
 
   const newest = score.events?.[0];
   if (!hasInitialState) {
@@ -105,10 +107,12 @@ async function requestConnection(path) {
   try {
     const response = await fetch(path, { method: 'POST' });
     const state = await response.json();
-    if (!response.ok) throw new Error(state.error || 'Falha na solicitação.');
     render(state);
+    if (!response.ok) {
+      connectionNote.textContent = state.errorSummary || state.error || 'Não foi possível conectar à live.';
+    }
   } catch (error) {
-    connectionNote.textContent = error.message;
+    connectionNote.textContent = `Não foi possível conectar: ${error.message}`;
   } finally {
     buttons.forEach(button => { button.disabled = false; });
   }

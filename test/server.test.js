@@ -28,7 +28,7 @@ test('serves the live score, allows direct admin and live actions, and broadcast
   let disconnectCalls = 0;
   tiktok.connect = async () => {
     connectCalls += 1;
-    return tiktok.getStatus();
+    return { ...tiktok.getStatus(), connected: true, isLive: true, roomId: 'room-test', error: null, errorSummary: null };
   };
   tiktok.disconnect = async () => {
     disconnectCalls += 1;

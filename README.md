@@ -15,6 +15,8 @@ O servidor não inicia a conexão TikTok ao subir. Clique em **CONECTAR LIVE** p
 
 O conector emite presentes reais por `WebcastEvent.GIFT`, incluindo `giftId`, `repeatCount`, `repeatEnd`, `giftType` e `giftDetails.giftName` quando a informação estendida está disponível. O sistema registra cada evento como `[GIFT] nome=... id=... quantity=... user=@...` para confirmar o catálogo da própria live.
 
+Ao clicar em conectar, o backend consulta primeiro `fetchIsLive()` e `fetchRoomId()` e só abre o WebSocket se a live estiver ativa. Os logs `[TIKTOK]` incluem o nome, código, stack e room ID em falhas. A versão instalada é conferida por `npm list tiktok-live-connector`.
+
 Os nomes exatos `Rose`/`Red Rose`/`Rosa vermelha` pontuam ESQUERDA; `White Rose`/`Rose blanche`/`Rosa branca` pontuam DIREITA. Os IDs não são presumidos: depois de confirmar os valores dos logs reais, podem ser definidos em `TIKTOK_RED_ROSE_GIFT_IDS` e `TIKTOK_WHITE_ROSE_GIFT_IDS` como listas separadas por vírgula. Presentes desconhecidos são apenas registrados. Presentes em sequência só pontuam quando o streak termina; IDs de mensagem recentes são deduplicados.
 
 Se o evento real usar outro nome, consulte a linha `[GIFT]` no log do servidor e acrescente o ID confirmado à variável correspondente. Não compartilhe cookies de sessão da conta para leitura de live.

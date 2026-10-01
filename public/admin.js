@@ -49,7 +49,7 @@ async function adminRequest(path, confirm = false) {
   try {
     const response = await fetch(path, { method: 'POST' });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Falha na solicitação.');
+    if (!response.ok) throw new Error(data.errorSummary || data.error || 'Falha na solicitação.');
     render(data);
     actionMessage.textContent = 'Concluído.';
   } catch (error) {

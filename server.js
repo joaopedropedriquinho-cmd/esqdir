@@ -59,10 +59,17 @@ io.on('connection', socket => socket.emit('state', snapshot()));
 app.get('/admin', (_request, response) => response.sendFile(path.join(root, 'public', 'admin.html')));
 app.get('/api/state', (_request, response) => response.json(snapshot()));
 
-app.post('/api/connect', async (_request, response) => {
-  await tiktok.connect(true);
-  response.json(snapshot());
-});
+async function connectTikTok(_request, response) {
+  const result = await tiktok.connect(true);
+  const state = snapshot();
+  if (!result.connected) {
+    const statusCode = result.isLive === false ? 409 : 502;
+    return response.status(statusCode).json({ ...state, error: result.error, errorSummary: result.errorSummary });
+  }
+  return response.json(state);
+}
+
+app.post('/api/connect', connectTikTok);
 app.post('/api/disconnect', async (_request, response) => {
   await tiktok.disconnect();
   response.json(snapshot());
@@ -74,10 +81,7 @@ app.post('/api/admin/reset', (_request, response) => {
   broadcast();
   response.json(snapshot());
 });
-app.post('/api/admin/reconnect', async (_request, response) => {
-  response.json(await tiktok.connect(true));
-  broadcast();
-});
+app.post('/api/admin/reconnect', connectTikTok);
 
 app.use((request, response, next) => {
   if (request.path.startsWith('/api/')) return response.status(404).json({ error: 'Rota não encontrada.' });
