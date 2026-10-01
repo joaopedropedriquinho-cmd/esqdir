@@ -5,7 +5,7 @@ Placar de duas equipes atualizado em tempo real por presentes recebidos no chat 
 ## Executar localmente
 
 1. Use Node.js 20 ou superior.
-2. Copie `.env.example` para `.env`; configure um `ADMIN_TOKEN` longo e aleatório e a `LIVE_START_PASSWORD`. A senha inicial padrão do exemplo é `rofer` e a conta padrão é `quiz_azul`.
+2. Copie `.env.example` para `.env`. O exemplo configura `ADMIN_TOKEN=rofer` e `LIVE_START_PASSWORD=rofer`; a conta padrão é `quiz_azul`.
 3. Execute `npm install` e depois `npm start`.
 4. Abra `http://localhost:3000` e o painel em `http://localhost:3000/admin`.
 
@@ -23,7 +23,7 @@ Se o evento real usar outro nome, consulte a linha `[GIFT]` no log do servidor e
 
 O placar, os últimos presentes, logs e IDs recentes processados são gravados atomicamente em `SCORE_FILE` (por padrão `data/score.json`). A zeragem exige confirmação e mantém o histórico. Em ambientes efêmeros, como o disco padrão do Render, os dados somem em reinicializações; use um disco persistente.
 
-O `render.yaml` configura o serviço Node, health check, `ADMIN_TOKEN` gerado pelo Render e disco persistente em `/var/data`. Ao criar o Blueprint, configure `LIVE_START_PASSWORD` (use `rofer` ou altere-a), os IDs reais confirmados para as rosas e, se necessário, a chave opcional de assinatura. O disco do Blueprint requer um plano Render com disco persistente.
+O `render.yaml` configura o serviço Node, health check e disco persistente em `/var/data`. Ao criar o Blueprint, configure `ADMIN_TOKEN=rofer` e `LIVE_START_PASSWORD=rofer`, além dos IDs reais confirmados para as rosas e, se necessário, a chave opcional de assinatura. O disco do Blueprint requer um plano Render com disco persistente.
 
 ## Verificações
 

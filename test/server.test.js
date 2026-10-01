@@ -8,7 +8,7 @@ import { io as createSocket } from 'socket.io-client';
 import { createGiftHandler } from '../lib/gift-rules.js';
 
 const temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'live-battle-server-'));
-process.env.ADMIN_TOKEN = 'test-admin-token';
+process.env.ADMIN_TOKEN = 'rofer';
 process.env.LIVE_START_PASSWORD = 'rofer';
 process.env.SCORE_FILE = path.join(temporaryDirectory, 'score.json');
 const { server, io, store, snapshot, publishGift, tiktok } = await import('../server.js');
@@ -81,7 +81,11 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
   const unauthorized = await fetch(`${baseUrl}/api/admin/reset`, { method: 'POST' });
   assert.equal(unauthorized.status, 401);
 
-  const adminHeaders = { 'x-admin-token': 'test-admin-token', 'content-type': 'application/json' };
+  const adminHeaders = { 'x-admin-token': 'rofer', 'content-type': 'application/json' };
+  const adminState = await fetch(`${baseUrl}/api/admin/state`, { headers: { 'x-admin-token': 'rofer' } });
+  assert.equal(adminState.status, 200);
+  assert.equal((await adminState.json()).live.username, 'quiz_azul');
+
   const wrongPassword = await fetch(`${baseUrl}/api/connect`, {
     method: 'POST',
     headers: adminHeaders,
@@ -139,7 +143,7 @@ test('serves the live score, protects admin APIs, and broadcasts over Socket.IO'
 
   const resetResponse = await fetch(`${baseUrl}/api/admin/reset`, {
     method: 'POST',
-    headers: { 'x-admin-token': 'test-admin-token' }
+    headers: { 'x-admin-token': 'rofer' }
   });
   assert.equal(resetResponse.status, 200);
   const broadcast = await waitForState(state => state.score.logs[0]?.message === 'Placar zerado pelo painel de administração.');
